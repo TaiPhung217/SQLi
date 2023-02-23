@@ -1,0 +1,55 @@
+<%@ Page Language="C#" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Get Book Title by ID</title>
+</head>
+<body>
+    <h1>Get Book Title by ID</h1>
+
+    <%-- Lấy tham số GET id từ URL --%>
+    <% string id = Request.QueryString["id"]; %>
+
+    <%-- Nếu id không null hoặc rỗng thì thực hiện truy vấn cơ sở dữ liệu --%>
+    <% if (!string.IsNullOrEmpty(id)) { %>
+        <%-- Chuỗi kết nối đến cơ sở dữ liệu --%>
+        <% string connectionString = "Data Source=myServerAddress;Initial Catalog=myDataBase;User ID=myUsername;Password=myPassword;"; %>
+
+        <%-- Câu truy vấn SQL --%>
+        <% string query = "SELECT title FROM books WHERE id = @id"; %>
+
+        <%-- Tạo đối tượng kết nối SQL --%>
+        <% using (SqlConnection connection = new SqlConnection(connectionString)) { %>
+            <%-- Mở kết nối --%>
+            <% connection.Open(); %>
+
+            <%-- Tạo đối tượng truy vấn SQL --%>
+            <% using (SqlCommand command = new SqlCommand(query, connection)) { %>
+                <%-- Thêm tham số id vào truy vấn SQL --%>
+                <% command.Parameters.AddWithValue("@id", id); %>
+
+                <%-- Thực hiện truy vấn SQL và đọc kết quả --%>
+                <% using (SqlDataReader reader = command.ExecuteReader()) { %>
+                    <%-- Nếu có kết quả thì hiển thị tên sách --%>
+                    <% if (reader.Read()) { %>
+                        <p>The book with ID <%= id %> is "<%= reader.GetString(0) %>".</p>
+                    <%-- Ngược lại thì hiển thị thông báo lỗi --%>
+                    <% } else { %>
+                        <p>Could not find book with ID <%= id %> in the database.</p>
+                    <% } %>
+                <% } %>
+            <% } %>
+
+            <%-- Đóng kết nối --%>
+            <% connection.Close(); %>
+        <% } %>
+    <%-- Ngược lại thì hiển thị form nhập id --%>
+    <% } else { %>
+        <form method="get">
+            <p>Enter book ID:</p>
+            <input type="text" name="id">
+            <input type="submit" value="Get Title">
+        </form>
+    <% } %>
+</body>
+</html>
